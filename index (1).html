@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Economic Indicators Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-orange: #E67E22;
+            --primary-orange-dark: #D35400;
+            --primary-green: #27AE60;
+            --primary-green-dark: #229954;
+            --navy-blue: #2C3E50;
+            --corporate-blue: #34495E;
+            --bg-light: #F8F9FA;
+            --bg-lighter: #FFFFFF;
+            --border-color: #E1E4E8;
+            --text-primary: #2C3E50;
+            --text-secondary: #7F8C8D;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-light: #1A1A1A;
+            --bg-lighter: #2D2D2D;
+            --border-color: #404040;
+            --text-primary: #E1E4E8;
+            --text-secondary: #9CA3AF;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-orange-dark) 100%);
+            color: white;
+            padding: 32px 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 24px;
+            padding: 8px 16px;
+            cursor: pointer;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 32px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 32px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 4px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: var(--primary-orange);
+        }
+
+        .tab.active {
+            color: var(--primary-orange);
+            border-bottom-color: var(--primary-orange);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: var(--bg-lighter);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon.orange {
+            background: rgba(230, 126, 34, 0.1);
+            color: var(--primary-orange);
+        }
+
+        .stat-icon.green {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--primary-green);
+        }
+
+        .stat-icon.blue {
+            background: rgba(52, 73, 94, 0.1);
+            color: var(--corporate-blue);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .stat-period {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .card {
+            background: var(--bg-lighter);
+            border-radius: var(--radius);
+            padding: 32px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 32px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-header i {
+            font-size: 24px;
+            color: var(--primary-orange);
+        }
+
+        .card-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 24px 0;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 24px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: var(--bg-light);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        .quote-card {
+            background: var(--bg-light);
+            border-left: 4px solid var(--primary-orange);
+            padding: 24px;
+            margin: 24px 0;
+            border-radius: var(--radius);
+        }
+
+        .quote-text {
+            font-size: 18px;
+            font-style: italic;
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .quote-author {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .quote-context {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-orange);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-orange-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-orange);
+            border: 2px solid var(--primary-orange);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-orange);
+            color: white;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 32px;
+            margin: 32px 0;
+        }
+
+        .info-box {
+            background: rgba(230, 126, 34, 0.05);
+            border: 1px solid rgba(230, 126, 34, 0.2);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin: 24px 0;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .info-box i {
+            color: var(--primary-orange);
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .info-box-content {
+            flex: 1;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .info-box-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--primary-orange);
+            font-size: 18px;
+        }
+
+        .trend-up {
+            color: var(--primary-green);
+        }
+
+        .trend-down {
+            color: #E74C3C;
+        }
+
+        .footer {
+            background: var(--bg-lighter);
+            border-top: 1px solid var(--border-color);
+            padding: 32px 24px;
+            margin-top: 48px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--primary-orange);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                gap: 16px;
+            }
+
+            .tab {
+                font-size: 14px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>India Economic Indicators Dashboard</h1>
+            <p>Comprehensive analysis of poverty reduction, economic growth, and governance effectiveness</p>
+        </div>
+    </div>
+
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon" id="theme-icon"></i>
+        <span id="theme-text">Dark Mode</span>
+    </button>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('overview')">Overview</div>
+            <div class="tab" onclick="switchTab('poverty')">Poverty Reduction</div>
+            <div class="tab" onclick="switchTab('economic')">Economic Growth</div>
+            <div class="tab" onclick="switchTab('digital')">Digital India</div>
+            <div class="tab" onclick="switchTab('governance')">Governance</div>
+            <div class="tab" onclick="switchTab('insights')">Key Insights</div>
+        </div>
+
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-value">4.9%</div>
+                    <div class="stat-label">National Poverty Rate</div>
+                    <div class="stat-period">Down from 29.5% (2011-12)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-value">248M</div>
+                    <div class="stat-label">People Escaped Poverty</div>
+                    <div class="stat-period">2013-14 to 2022-23</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="stat-value">9.2%</div>
+                    <div class="stat-label">GDP Growth</div>
+                    <div class="stat-period">FY 2023-24</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="stat-value">18.39B</div>
+                    <div class="stat-label">UPI Transactions</div>
+                    <div class="stat-period">June 2025</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar"></i>
+                    <h2>Poverty Rate Trends</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="povertyOverviewChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-briefcase"></i>
+                        <h2>Key Achievements</h2>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Extreme Poverty</span>
+                        <span class="metric-value trend-up">16.2% → 2.3%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Rural Consumption Growth</span>
+                        <span class="metric-value trend-up">164%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Fresh Fruit Access</span>
+                        <span class="metric-value trend-up">60% → 93%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Digital Payment Share</span>
+                        <span class="metric-value trend-up">17% → 85%</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-lightbulb"></i>
+                        <h2>Governance Impact</h2>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">ROI vs More Spending</span>
+                        <span class="metric-value">10x</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Judge Staffing ROI</span>
+                        <span class="metric-value">30x</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">NREGA Leakage Reduction</span>
+                        <span class="metric-value">41%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Inefficiency vs Corruption</span>
+                        <span class="metric-value">80% : 15%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="poverty" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>Poverty Rate Decline (2011-2024)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="povertyChart"></canvas>
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="info-box-content">
+                        <div class="info-box-title">Methodology</div>
+                        <div class="info-box-text">Poverty estimates based on official consumption expenditure surveys using the Rangarajan Committee methodology.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-globe"></i>
+                    <h2>Multidimensional Poverty Index (MPI)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="mpiChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <h2>State-wise Poverty Rates (2022-23)</h2>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>State</th>
+                                <th>Rural 2011-12 (%)</th>
+                                <th>Rural 2022-23 (%)</th>
+                                <th>Urban 2011-12 (%)</th>
+                                <th>Urban 2022-23 (%)</th>
+                                <th>Category</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stateTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-shopping-basket"></i>
+                    <h2>Consumption Trends</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="consumptionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="economic" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-area"></i>
+                    <h2>GDP Growth Rate (2020-2025)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="gdpChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-percentage"></i>
+                    <h2>Inflation Trends (2021-2025)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="inflationChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensils"></i>
+                    <h2>Food Consumption Improvements</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="foodChart"></canvas>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <div class="info-box-content">
+                    <div class="info-box-title">Dietary Diversification</div>
+                    <div class="info-box-text">The free food grain policy covering 800 million beneficiaries has enabled significant dietary diversification, with substantial increases in consumption of fruits, dairy, and protein-rich foods among the bottom 20% of population.</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="digital" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h2>UPI Transaction Volume (Billions)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="upiVolumeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-rupee-sign"></i>
+                    <h2>UPI Transaction Value (Trillions)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="upiValueChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie"></i>
+                    <h2>Digital Payment Market Share</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="digitalShareChart"></canvas>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <div class="info-box-content">
+                    <div class="info-box-title">Digital Payment Revolution</div>
+                    <div class="info-box-text">UPI has transformed India's payment ecosystem, growing from 0.92 billion transactions in FY 2017-18 to 18.39 billion in June 2025 alone, now representing 85% of digital payments.</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="governance" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-balance-scale"></i>
+                    <h2>High-Impact Governance Interventions</h2>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Intervention</th>
+                                <th>Impact</th>
+                                <th>ROI Multiple</th>
+                                <th>Cost Effectiveness</th>
+                            </tr>
+                        </thead>
+                        <tbody id="governanceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar"></i>
+                    <h2>ROI Comparison: Better Governance vs More Spending</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="roiChart"></canvas>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-lightbulb"></i>
+                <div class="info-box-content">
+                    <div class="info-box-title">Key Finding</div>
+                    <div class="info-box-text">Research shows that 80% of government waste comes from inefficiency, not corruption (15-20%). Improving governance systems delivers 10x better ROI than simply increasing budgets.</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-gavel"></i>
+                        <h2>Judicial System</h2>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Pending Cases</span>
+                        <span class="metric-value">45M</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Cases Resolved per Judge</span>
+                        <span class="metric-value">200/year</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Economic ROI per Judge</span>
+                        <span class="metric-value trend-up">30x</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Tax Revenue Impact</span>
+                        <span class="metric-value trend-up">6x salary</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <h2>Welfare Delivery</h2>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">NREGA Leakage Reduction</span>
+                        <span class="metric-value trend-up">41%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">SSP Leakage Reduction</span>
+                        <span class="metric-value trend-up">47%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Biometric System ROI</span>
+                        <span class="metric-value">10x</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Call Center ROI</span>
+                        <span class="metric-value">100x</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="insights" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-quote-left"></i>
+                    <h2>Expert Perspectives</h2>
+                </div>
+                <div id="quotesContainer"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-podcast"></i>
+                    <h2>Source Material</h2>
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-microphone"></i>
+                    <div class="info-box-content">
+                        <div class="info-box-title">Why Govt employees get paid more yet deliver less?</div>
+                        <div class="info-box-text">
+                            Guest: Dr. Karthik Muralidharan | Host: Monika Halan<br>
+                            Growwing India Podcast | Duration: 1:27:05 | August 15, 2025
+                        </div>
+                        <a href="https://www.youtube.com/watch?v=mtGJzZu15ZQ" target="_blank" class="btn btn-outline" style="margin-top: 12px;">
+                            <i class="fas fa-external-link-alt"></i>
+                            Watch Episode
+                        </a>
+                    </div>
+                </div>
+                <div class="info-box" style="margin-top: 16px;">
+                    <i class="fas fa-microphone"></i>
+                    <div class="info-box-content">
+                        <div class="info-box-title">Are freebies destroying our economy?</div>
+                        <div class="info-box-text">
+                            Guest: Dr. Shamika Ravi | Host: Monika Halan<br>
+                            Growwing India Podcast | Duration: 0:58:29 | June 01, 2025
+                        </div>
+                        <a href="https://www.youtube.com/watch?v=firRMsSiJQ4" target="_blank" class="btn btn-outline" style="margin-top: 12px;">
+                            <i class="fas fa-external-link-alt"></i>
+                            Watch Episode
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-download"></i>
+                    <h2>Export Data</h2>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Download comprehensive datasets for further analysis</p>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="downloadData('poverty')">
+                        <i class="fas fa-file-csv"></i>
+                        Poverty Data
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadData('economic')">
+                        <i class="fas fa-file-csv"></i>
+                        Economic Indicators
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadData('digital')">
+                        <i class="fas fa-file-csv"></i>
+                        Digital Payments
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadData('governance')">
+                        <i class="fas fa-file-csv"></i>
+                        Governance Studies
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-content">
+            <p class="footer-text">Data compiled from official government surveys and academic research</p>
+            <div class="footer-links">
+                <a href="https://www.youtube.com/watch?v=mtGJzZu15ZQ" target="_blank" class="footer-link">
+                    <i class="fas fa-podcast"></i>
+                    Governance Episode
+                </a>
+                <a href="https://www.youtube.com/watch?v=firRMsSiJQ4" target="_blank" class="footer-link">
+                    <i class="fas fa-podcast"></i>
+                    Freebies Episode
+                </a>
+            </div>
+            <p class="footer-text" style="margin-top: 16px; font-size: 12px;">
+                Dashboard compiled October 2025 | Sources: NSO, NITI Aayog, Academic Research
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        const povertyData = [{"year":"2011-12","all_india":29.5,"rural":33.9,"urban":20.9,"extreme_poverty_wb":16.2},{"year":"2022-23","all_india":9.5,"rural":7.2,"urban":4.6,"extreme_poverty_wb":2.3},{"year":"2023-24","all_india":4.9,"rural":10.4,"urban":6.5,"extreme_poverty_wb":null}];
+        const mpiData = [{"period":"2005-06","mpi_value":0.283,"headcount":null,"people_escaped":null},{"period":"2013-14","mpi_value":0.2917,"headcount":29.17,"people_escaped":null},{"period":"2015-16","mpi_value":0.122,"headcount":24.85,"people_escaped":null},{"period":"2019-21","mpi_value":0.069,"headcount":14.96,"people_escaped":135},{"period":"2022-23","mpi_value":0.1128,"headcount":11.28,"people_escaped":248.2}];
+        const consumptionData = [{"year":"2011-12","rural_mpce":1430,"urban_mpce":2630,"urban_rural_gap":84},{"year":"2022-23","rural_mpce":3773,"urban_mpce":6459,"urban_rural_gap":71},{"year":"2023-24","rural_mpce":4122,"urban_mpce":6996,"urban_rural_gap":70}];
+        const foodConsumption = [{"metric":"People eating fresh fruits (%)","earlier":60,"recent":93,"period":"2011-12 to 2022-23"},{"metric":"Milk & dairy increase (bottom 20%)","earlier":0,"recent":40,"period":"Percentage increase"},{"metric":"Eggs, fish, meat increase (bottom 20%)","earlier":0,"recent":40,"period":"Percentage increase"},{"metric":"Food share - Rural (%)","earlier":55.7,"recent":48.6,"period":"2011-12 to 2022-23"},{"metric":"Food share - Urban (%)","earlier":48.0,"recent":41.9,"period":"2011-12 to 2022-23"}];
+        const economicIndicators = [{"year":2020,"gdp_growth":-5.8,"inflation":null},{"year":2021,"gdp_growth":9.7,"inflation":4.1},{"year":2022,"gdp_growth":7.0,"inflation":6.0},{"year":2023,"gdp_growth":8.15,"inflation":6.5},{"year":2024,"gdp_growth":6.5,"inflation":5.1},{"year":2025,"gdp_growth":6.5,"inflation":1.54}];
+        const upiTransactions = [{"fiscal_year":"2017-18","volume_billion":0.92,"value_trillion":1,"digital_share":17},{"fiscal_year":"2019-20","volume_billion":12.5,"value_trillion":null,"digital_share":34},{"fiscal_year":"2022-23","volume_billion":83.75,"value_trillion":139,"digital_share":62},{"fiscal_year":"June 2025","volume_billion":18.39,"value_trillion":24.03,"digital_share":85}];
+        const researchStudies = [{"study":"NREGA Biometric Smartcards","intervention":"Biometric authentication for payments","impact":"41% reduction in NREGA leakages; 47% in SSP","roi_multiple":10,"cost_effectiveness":"Time savings = intervention cost"},{"study":"Telangana Rythu Bandhu Call Center","intervention":"25,000 calls to farmers tracking payments","impact":"100x ROI - money delivered on time","roi_multiple":100,"cost_effectiveness":"Rs 100 cost → Rs 10,000 on-time delivery"},{"study":"District Court Judge Staffing","intervention":"Adding one judge per court","impact":"200 cases resolved/year; 30x economic ROI","roi_multiple":30,"cost_effectiveness":"Tax revenue 6x; Economic gains 30x salary"},{"study":"Education Technology Instruction","intervention":"Technology-aided instruction","impact":"Improved learning outcomes","roi_multiple":null,"cost_effectiveness":null},{"study":"Teacher Performance Pay","intervention":"Performance-based teacher incentives","impact":"Better student performance","roi_multiple":null,"cost_effectiveness":null}];
+        const statePoverty = [{"state":"Odisha","rural_2011":47.8,"rural_2022":8.6,"urban_2011":null,"urban_2022":null,"category":"Highest reduction"},{"state":"Bihar","rural_2011":null,"rural_2022":null,"urban_2011":50.8,"urban_2022":9.1,"category":"Highest reduction"},{"state":"Chhattisgarh","rural_2011":null,"rural_2022":25.1,"urban_2011":null,"urban_2022":13.3,"category":"Highest poverty"},{"state":"Himachal Pradesh","rural_2011":0.4,"rural_2022":0.4,"urban_2011":8.8,"urban_2022":2.0,"category":"Lowest poverty"},{"state":"Tamil Nadu","rural_2011":null,"rural_2022":null,"urban_2011":null,"urban_2022":1.9,"category":"Lowest poverty"},{"state":"Kerala","rural_2011":7.3,"rural_2022":1.4,"urban_2011":null,"urban_2022":null,"category":"Low poverty"}];
+        const quotes = [{"quote":"The ROI of better governance is often 10 times more than simply spending more money","author":"Dr. Karthik Muralidharan","context":"On improving government effectiveness"},{"quote":"India has eradicated poverty of this nature. This is a massive achievement.","author":"Dr. Shamika Ravi","context":"On poverty reduction using Rangarajan methodology"},{"quote":"Adding more money to current systems is like putting petrol in a 1950s car","author":"Dr. Karthik Muralidharan","context":"Ambassador car analogy for government systems"},{"quote":"Only 15-20% of government waste is corruption. The other 80% is just inefficiency.","author":"Dr. Karthik Muralidharan","context":"On identifying root causes of waste"},{"quote":"The free food grain policy has fiscalized the food plate of the bottom 50%","author":"Dr. Shamika Ravi","context":"On dietary diversification impact"},{"quote":"We have abundance of food grain in India. The sustainability question is about fiscal policy.","author":"Dr. Shamika Ravi","context":"On welfare program sustainability"}];
+
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.className = 'fas fa-moon';
+                text.textContent = 'Dark Mode';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+                text.textContent = 'Light Mode';
+            }
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Chart colors
+        const chartColors = ['#E67E22', '#27AE60', '#3498DB', '#E74C3C', '#9B59B6', '#F39C12', '#1ABC9C', '#34495E'];
+
+        // Initialize charts
+        function initCharts() {
+            // Poverty Overview Chart
+            new Chart(document.getElementById('povertyOverviewChart'), {
+                type: 'line',
+                data: {
+                    labels: povertyData.map(d => d.year),
+                    datasets: [{
+                        label: 'All India',
+                        data: povertyData.map(d => d.all_india),
+                        borderColor: chartColors[0],
+                        backgroundColor: chartColors[0] + '20',
+                        tension: 0.4
+                    }, {
+                        label: 'Rural',
+                        data: povertyData.map(d => d.rural),
+                        borderColor: chartColors[1],
+                        backgroundColor: chartColors[1] + '20',
+                        tension: 0.4
+                    }, {
+                        label: 'Urban',
+                        data: povertyData.map(d => d.urban),
+                        borderColor: chartColors[2],
+                        backgroundColor: chartColors[2] + '20',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Poverty Rate (%)' } }
+                    }
+                }
+            });
+
+            // Poverty Chart
+            new Chart(document.getElementById('povertyChart'), {
+                type: 'bar',
+                data: {
+                    labels: povertyData.map(d => d.year),
+                    datasets: [{
+                        label: 'All India',
+                        data: povertyData.map(d => d.all_india),
+                        backgroundColor: chartColors[0]
+                    }, {
+                        label: 'Rural',
+                        data: povertyData.map(d => d.rural),
+                        backgroundColor: chartColors[1]
+                    }, {
+                        label: 'Urban',
+                        data: povertyData.map(d => d.urban),
+                        backgroundColor: chartColors[2]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Poverty Rate (%)' } } }
+                }
+            });
+
+            // MPI Chart
+            new Chart(document.getElementById('mpiChart'), {
+                type: 'line',
+                data: {
+                    labels: mpiData.map(d => d.period),
+                    datasets: [{
+                        label: 'MPI Headcount (%)',
+                        data: mpiData.map(d => d.headcount),
+                        borderColor: chartColors[0],
+                        backgroundColor: chartColors[0] + '20',
+                        yAxisID: 'y',
+                        tension: 0.4
+                    }, {
+                        label: 'People Escaped (Millions)',
+                        data: mpiData.map(d => d.people_escaped),
+                        borderColor: chartColors[1],
+                        backgroundColor: chartColors[1] + '20',
+                        yAxisID: 'y1',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { type: 'linear', position: 'left', title: { display: true, text: 'Headcount (%)' } },
+                        y1: { type: 'linear', position: 'right', title: { display: true, text: 'People (Millions)' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+
+            // Consumption Chart
+            new Chart(document.getElementById('consumptionChart'), {
+                type: 'bar',
+                data: {
+                    labels: consumptionData.map(d => d.year),
+                    datasets: [{
+                        label: 'Rural MPCE (₹)',
+                        data: consumptionData.map(d => d.rural_mpce),
+                        backgroundColor: chartColors[1]
+                    }, {
+                        label: 'Urban MPCE (₹)',
+                        data: consumptionData.map(d => d.urban_mpce),
+                        backgroundColor: chartColors[2]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Monthly Per Capita Expenditure (₹)' } } }
+                }
+            });
+
+            // GDP Chart
+            new Chart(document.getElementById('gdpChart'), {
+                type: 'bar',
+                data: {
+                    labels: economicIndicators.map(d => d.year),
+                    datasets: [{
+                        label: 'GDP Growth Rate (%)',
+                        data: economicIndicators.map(d => d.gdp_growth),
+                        backgroundColor: economicIndicators.map(d => d.gdp_growth < 0 ? chartColors[3] : chartColors[1])
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { title: { display: true, text: 'Growth Rate (%)' } } }
+                }
+            });
+
+            // Inflation Chart
+            new Chart(document.getElementById('inflationChart'), {
+                type: 'line',
+                data: {
+                    labels: economicIndicators.filter(d => d.inflation).map(d => d.year),
+                    datasets: [{
+                        label: 'Inflation Rate (%)',
+                        data: economicIndicators.filter(d => d.inflation).map(d => d.inflation),
+                        borderColor: chartColors[0],
+                        backgroundColor: chartColors[0] + '20',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Inflation Rate (%)' } } }
+                }
+            });
+
+            // Food Chart
+            const foodMetrics = foodConsumption.filter(d => d.metric.includes('fruits') || d.metric.includes('dairy') || d.metric.includes('fish'));
+            new Chart(document.getElementById('foodChart'), {
+                type: 'bar',
+                data: {
+                    labels: foodMetrics.map(d => d.metric.split(' ').slice(0, 3).join(' ')),
+                    datasets: [{
+                        label: 'Earlier',
+                        data: foodMetrics.map(d => d.earlier),
+                        backgroundColor: chartColors[7]
+                    }, {
+                        label: 'Recent',
+                        data: foodMetrics.map(d => d.recent),
+                        backgroundColor: chartColors[1]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Percentage (%)' } } }
+                }
+            });
+
+            // UPI Volume Chart
+            new Chart(document.getElementById('upiVolumeChart'), {
+                type: 'bar',
+                data: {
+                    labels: upiTransactions.map(d => d.fiscal_year),
+                    datasets: [{
+                        label: 'Transaction Volume (Billions)',
+                        data: upiTransactions.map(d => d.volume_billion),
+                        backgroundColor: chartColors[0]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Volume (Billions)' } } }
+                }
+            });
+
+            // UPI Value Chart
+            const upiWithValue = upiTransactions.filter(d => d.value_trillion);
+            new Chart(document.getElementById('upiValueChart'), {
+                type: 'line',
+                data: {
+                    labels: upiWithValue.map(d => d.fiscal_year),
+                    datasets: [{
+                        label: 'Transaction Value (₹ Trillions)',
+                        data: upiWithValue.map(d => d.value_trillion),
+                        borderColor: chartColors[1],
+                        backgroundColor: chartColors[1] + '20',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Value (₹ Trillions)' } } }
+                }
+            });
+
+            // Digital Share Chart
+            new Chart(document.getElementById('digitalShareChart'), {
+                type: 'line',
+                data: {
+                    labels: upiTransactions.map(d => d.fiscal_year),
+                    datasets: [{
+                        label: 'UPI Share of Digital Payments (%)',
+                        data: upiTransactions.map(d => d.digital_share),
+                        borderColor: chartColors[2],
+                        backgroundColor: chartColors[2] + '20',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } } }
+                }
+            });
+
+            // ROI Chart
+            const studiesWithROI = researchStudies.filter(d => d.roi_multiple);
+            new Chart(document.getElementById('roiChart'), {
+                type: 'bar',
+                data: {
+                    labels: studiesWithROI.map(d => d.study.split(' ').slice(0, 3).join(' ')),
+                    datasets: [{
+                        label: 'ROI Multiple',
+                        data: studiesWithROI.map(d => d.roi_multiple),
+                        backgroundColor: chartColors[1]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { position: 'top' } },
+                    scales: { x: { beginAtZero: true, title: { display: true, text: 'Return on Investment (Multiple)' } } }
+                }
+            });
+        }
+
+        // Populate tables
+        function populateTables() {
+            // State poverty table
+            const stateTableBody = document.getElementById('stateTableBody');
+            statePoverty.forEach(state => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${state.state}</strong></td>
+                    <td>${state.rural_2011 !== null ? state.rural_2011 + '%' : '—'}</td>
+                    <td>${state.rural_2022 !== null ? state.rural_2022 + '%' : '—'}</td>
+                    <td>${state.urban_2011 !== null ? state.urban_2011 + '%' : '—'}</td>
+                    <td>${state.urban_2022 !== null ? state.urban_2022 + '%' : '—'}</td>
+                    <td>${state.category}</td>
+                `;
+                stateTableBody.appendChild(row);
+            });
+
+            // Governance table
+            const governanceTableBody = document.getElementById('governanceTableBody');
+            researchStudies.forEach(study => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${study.intervention}</strong></td>
+                    <td>${study.impact}</td>
+                    <td>${study.roi_multiple ? study.roi_multiple + 'x' : '—'}</td>
+                    <td>${study.cost_effectiveness || '—'}</td>
+                `;
+                governanceTableBody.appendChild(row);
+            });
+        }
+
+        // Populate quotes
+        function populateQuotes() {
+            const quotesContainer = document.getElementById('quotesContainer');
+            quotes.forEach(q => {
+                const quoteCard = document.createElement('div');
+                quoteCard.className = 'quote-card';
+                quoteCard.innerHTML = `
+                    <div class="quote-text">"${q.quote}"</div>
+                    <div class="quote-author">— ${q.author}</div>
+                    <div class="quote-context">${q.context}</div>
+                `;
+                quotesContainer.appendChild(quoteCard);
+            });
+        }
+
+        // Download data
+        function downloadData(type) {
+            let data, filename;
+            
+            switch(type) {
+                case 'poverty':
+                    data = povertyData;
+                    filename = 'india-poverty-data.json';
+                    break;
+                case 'economic':
+                    data = economicIndicators;
+                    filename = 'india-economic-indicators.json';
+                    break;
+                case 'digital':
+                    data = upiTransactions;
+                    filename = 'india-upi-transactions.json';
+                    break;
+                case 'governance':
+                    data = researchStudies;
+                    filename = 'india-governance-studies.json';
+                    break;
+            }
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initCharts();
+            populateTables();
+            populateQuotes();
+        });
+    </script>
+</body>
+</html>
